@@ -5,7 +5,24 @@
       "Bash(mkdir -p python claude-code)",
       "Bash(mv architecture_review consistency_check document_summarizer endpoint_analysis pr_review_assistant shared python/)",
       "Bash(mv pr-description-generator.md claude-code/)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "WebFetch(domain:gist.githubusercontent.com)",
+      "Bash(curl *)",
+      "Bash(env)",
+      "Bash(claude --version)",
+      "Bash(codex --version)",
+      "Bash(codex --help)",
+      "Bash(codex exec *)",
+      "Bash(bash -n install.sh)",
+      "Bash(./install.sh help *)",
+      "Bash(git -C /Users/brady/workspace/Obsidian status --short)",
+      "Bash(rm -rf /Users/brady/workspace/Obsidian)",
+      "Bash(/Users/brady/workspace/cursor-setting/install.sh obsidian-init *)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(mkdir -p /Users/brady/workspace/Obsidian/.obsidian/plugins/obsidian-git)",
+      "Bash(cp /Users/brady/workspace/cursor-setting/templates/obsidian/vault/.obsidian/community-plugins.json /Users/brady/workspace/Obsidian/.obsidian/community-plugins.json)",
+      "Bash(cp /Users/brady/workspace/cursor-setting/templates/obsidian/vault/.obsidian/plugins/obsidian-git/data.json /Users/brady/workspace/Obsidian/.obsidian/plugins/obsidian-git/data.json)"
     ]
   }
 }

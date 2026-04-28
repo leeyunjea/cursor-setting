@@ -15,6 +15,8 @@ case "$SUBCMD" in
         # init: 프로젝트 레포에 CLAUDE.md 생성
         # ─────────────────────────────────────
         TARGET_DIR="${2:-.}"
+        # 틸드(~)를 $HOME으로 확장 (변수 안의 틸드는 쉘이 자동 확장하지 않음)
+        TARGET_DIR="${TARGET_DIR/#\~/$HOME}"
         TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
         CLAUDE_MD="$TARGET_DIR/CLAUDE.md"
 
@@ -125,6 +127,66 @@ CLAUDEEOF
         exit 0
         ;;
 
+    obsidian-init|obsidian)
+        # ─────────────────────────────────────
+        # obsidian-init: Obsidian vault 부트스트랩
+        # ─────────────────────────────────────
+        VAULT_PATH="${2:-}"
+        if [ -z "$VAULT_PATH" ]; then
+            echo "사용법: ./install.sh obsidian-init <vault-path>"
+            echo "예시: ./install.sh obsidian-init ~/Documents/MyVault"
+            exit 1
+        fi
+
+        VAULT_PATH="${VAULT_PATH/#\~/$HOME}"
+        SOURCE="$DOTFILES_DIR/templates/obsidian/vault"
+
+        echo "=== Obsidian Vault Bootstrap ==="
+        echo "소스: $SOURCE"
+        echo "대상: $VAULT_PATH"
+        echo ""
+
+        # 안전 검사
+        if [ ! -d "$SOURCE" ]; then
+            echo "[✗] 템플릿 소스를 찾을 수 없습니다: $SOURCE"
+            exit 1
+        fi
+
+        if [ -d "$VAULT_PATH/.obsidian" ]; then
+            echo "[!] 이미 Obsidian vault 입니다: $VAULT_PATH"
+            echo "    기존 vault는 보호됩니다. 덮어쓰려면 직접 삭제 후 재실행."
+            exit 1
+        fi
+
+        if [ -d "$VAULT_PATH" ] && [ -n "$(ls -A "$VAULT_PATH" 2>/dev/null)" ]; then
+            echo "[!] 디렉토리가 비어있지 않습니다: $VAULT_PATH"
+            echo "    안전을 위해 빈 디렉토리 또는 미존재 경로만 허용합니다."
+            exit 1
+        fi
+
+        # vault 생성
+        mkdir -p "$VAULT_PATH"
+        cp -a "$SOURCE/." "$VAULT_PATH/"
+        echo "[✓] Vault 컨텐츠 복사 완료"
+
+        # git init (선택)
+        if command -v git &>/dev/null && [ ! -d "$VAULT_PATH/.git" ]; then
+            (cd "$VAULT_PATH" && git init -q)
+            echo "[✓] git init 완료 ($VAULT_PATH/.git)"
+        fi
+
+        echo ""
+        echo "=== 다음 단계 ==="
+        echo "  1. Obsidian 앱 실행 → 'Open folder as vault' → $VAULT_PATH 선택"
+        echo "  2. Settings → Templates → Template folder location: '_templates' 확인"
+        echo "  3. Settings → Daily notes → Template: '_templates/daily-note' 확인"
+        echo "  4. 노트 작업 시: cd $VAULT_PATH && claude"
+        echo ""
+        echo "온보딩 가이드: $DOTFILES_DIR/docs/obsidian-onboarding.md"
+        echo "Vault 컨벤션:  $VAULT_PATH/CLAUDE.md"
+        exit 0
+        ;;
+
     install|"")
         # 아래 기존 install 로직으로 계속
         ;;
@@ -133,14 +195,16 @@ CLAUDEEOF
         echo "사용법: ./install.sh [command] [options]"
         echo ""
         echo "Commands:"
-        echo "  install          글로벌 설치 (기본값) — ~/.claude/에 symlink 생성"
-        echo "  init [path]      프로젝트 초기화 — CLAUDE.md + 작업 디렉토리 생성"
-        echo "  help             이 도움말 표시"
+        echo "  install                 글로벌 설치 (기본값) — ~/.claude/에 symlink 생성"
+        echo "  init [path]             프로젝트 초기화 — CLAUDE.md + 작업 디렉토리 생성"
+        echo "  obsidian-init <path>    Obsidian vault 부트스트랩 — 폴더 구조 + 템플릿 + Claude Code 연동"
+        echo "  help                    이 도움말 표시"
         echo ""
         echo "Examples:"
-        echo "  ./install.sh                    # 글로벌 설치"
-        echo "  ./install.sh init .             # 현재 디렉토리에 프로젝트 초기화"
-        echo "  ./install.sh init ~/my-project  # 특정 프로젝트에 초기화"
+        echo "  ./install.sh                                    # 글로벌 설치"
+        echo "  ./install.sh init .                             # 현재 디렉토리 프로젝트 초기화"
+        echo "  ./install.sh init ~/my-project                  # 특정 프로젝트 초기화"
+        echo "  ./install.sh obsidian-init ~/Documents/MyVault  # Obsidian vault 생성"
         exit 0
         ;;
 
@@ -272,6 +336,12 @@ echo "  /commit-mailplug    - 팀 컨벤션 커밋 메시지 추천"
 echo "  /commit-suggest     - 일반 커밋 메시지 추천"
 echo "  /pr-description     - PR 설명 자동 생성"
 echo ""
+echo "  === Claude Code 사용 통계 ==="
+echo "  /claude-usage-collect  - 본인 사용 데이터 수집 → 공유 zip 생성 (팀원 배포용)"
+echo "  /claude-usage-analyze  - 본인 사용 분석 → 개인 리포트 생성"
+echo "  /claude-usage-report   - 팀원 JSON 수합 → 8섹션 팀 리포트 (+Confluence 옵션)"
+echo ""
 echo "프로젝트 초기화: ./install.sh init /path/to/project"
+echo "Obsidian vault: ./install.sh obsidian-init /path/to/vault"
 echo "토큰 설정:      $DOTFILES_DIR/urltest.http"
 echo "워크플로우:     $DOTFILES_DIR/WORKFLOW.md"
